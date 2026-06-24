@@ -1,4 +1,4 @@
-# Y-diff: Structure-Texture Decoupled Diffusion Distillation for H&E-to-pCLE Translation [🎉ECCV 2026🎉]
+# Y-diff: Structure-Texture Decoupled Diffusion Distillation for H&E-to-pCLE Translation
 This repository contains the training and evaluation code for a teacher-student diffusion image translation pipeline with latent flow matching. The code supports:
 
 - teacher model training with a DiffAE backbone and optional SPNet mapping module;
