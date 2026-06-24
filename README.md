@@ -1,15 +1,10 @@
 # Y-diff: Structure-Texture Decoupled Diffusion Distillation for H&E-to-pCLE Translation
-- `TODO`: Add dataset link.
-# Y-Diff Flow Matching
-
 This repository contains the training and evaluation code for a teacher-student diffusion image translation pipeline with latent flow matching. The code supports:
 
 - teacher model training with a DiffAE backbone and optional SPNet mapping module;
 - standalone latent Flow Matching (FM) training;
 - student model training with the trained teacher and FM module;
 - inference and metric evaluation on paired test sets.
-
-> Dataset download links are intentionally left as placeholders. Replace the `TODO` entries below with your released dataset URLs before publishing.
 
 ## Repository Structure
 
@@ -54,14 +49,6 @@ pip install numpy pillow tqdm scipy tensorboard wandb opencv-python scikit-image
 pip install git+https://github.com/openai/CLIP.git
 ```
 
-If your environment already provides the local `diffae` and `CLIP` packages, keep using that environment. Otherwise, make sure the imported modules below are available:
-
-```python
-import clip
-from diffae.templates_latent import ffhq256_autoenc_latent
-from diffae.experiment import LitModel
-```
-
 ## Dataset Links
 
 Replace the placeholders with the official download links before release.
@@ -71,16 +58,6 @@ Replace the placeholders with the official download links before release.
 | CCD dataset | `HE -> pCLE` | `TODO: <CCD_DATASET_LINK>` |
 | ER-004 dataset | `HE -> IHC` | `TODO: <ER004_DATASET_LINK>` |
 | Pretrained DiffAE checkpoint | `ffhq256_autoenc` | `TODO: <DIFFAE_CKPT_LINK>` |
-| Released teacher checkpoint | `prepared_teacher_ckpt/epoch_30.pt` | `TODO: <TEACHER_CKPT_LINK>` |
-| Released FM checkpoint | `fm/2048_8/best_fm.pt` | `TODO: <FM_CKPT_LINK>` |
-| Released student checkpoint | `exp/student_xxx/ckpt/epoch_xxx.pt` | `TODO: <STUDENT_CKPT_LINK>` |
-
-## Data Preparation
-
-The dataset path is passed through `--dataset_path`. The code selects the target domain according to the dataset name:
-
-- if `dataset_path` contains `ccd`, the target domain is `pCLE`;
-- if `dataset_path` contains `er-004` or `er004`, the target domain is `IHC`.
 
 Recommended directory layout:
 
@@ -101,8 +78,6 @@ datasets/
         +-- train/
         +-- test/
 ```
-
-Images can be stored as `.jpg`, `.jpeg`, `.png`, `.bmp`, or `.webp`. During training and evaluation, images are resized to `256 x 256` and normalized to `[-1, 1]`.
 
 ## Checkpoint Preparation
 
@@ -148,11 +123,11 @@ For the default `--fm_work_dir 2048_8`, the expected path is:
 fm/2048_8/best_fm.pt
 ```
 
-The standalone FM trainer saves checkpoints inside a timestamped run directory, for example `fm/2048_8_20260624_120000/best_fm.pt`. Copy or symlink the selected checkpoint to the expected path:
+The standalone FM trainer saves checkpoints inside a timestamped run directory, for example `fm/2048_8/best_fm.pt`. Copy or symlink the selected checkpoint to the expected path:
 
 ```bash
 mkdir -p fm/2048_8
-cp fm/2048_8_YYYYMMDD_HHMMSS/best_fm.pt fm/2048_8/best_fm.pt
+cp fm/2048_8/best_fm.pt
 ```
 
 ## Training
@@ -175,7 +150,7 @@ Example for the CCD dataset:
 ```bash
 python train_diffaeB_map.py \
   --trainer_version backbone \
-  --dataset_path datasets/CCD_dataset \
+  --dataset_path datasets/YOUR_dataset \
   --diffae_ckpt diffae/checkpoints \
   --work_dir exp/teacher_ccd \
   --gpus 0,1 \
@@ -190,32 +165,6 @@ python train_diffaeB_map.py \
   --print_freq 10
 ```
 
-Example for the ER-004 dataset:
-
-```bash
-python train_diffaeB_map.py \
-  --trainer_version backbone \
-  --dataset_path datasets/ER-004_dataset \
-  --diffae_ckpt diffae/checkpoints \
-  --work_dir exp/teacher_er004 \
-  --gpus 0,1 \
-  --enable_spnet \
-  --n_iter 30 \
-  --batch_size 8 \
-  --lr 5e-6
-```
-
-Teacher checkpoints are saved to:
-
-```text
-<work_dir>/ckpt/epoch_<epoch>.pt
-```
-
-Training visualizations are saved to:
-
-```text
-<work_dir>/imgs_train/
-```
 
 Before student training, place the teacher checkpoint at:
 
@@ -230,7 +179,7 @@ The FM module learns the latent mapping between source-domain and target-domain 
 
 ```bash
 python trainer_fm_transfer.py \
-  --dataset_path datasets/CCD_dataset \
+  --dataset_path datasets/YOUR_dataset \
   --diffae_ckpt diffae/checkpoints \
   --work_dir fm \
   --exp_name 2048_8 \
@@ -253,7 +202,7 @@ Copy the best checkpoint to the path expected by student training and evaluation
 
 ```bash
 mkdir -p fm/2048_8
-cp fm/2048_8_YYYYMMDD_HHMMSS/best_fm.pt fm/2048_8/best_fm.pt
+cp fm/2048_8/best_fm.pt
 ```
 
 ### 3. Train the Student
@@ -269,7 +218,7 @@ Example for the CCD dataset:
 ```bash
 python train_diffaeB_map.py \
   --trainer_version fm_student \
-  --dataset_path datasets/CCD_dataset \
+  --dataset_path datasets/YOUR_dataset \
   --diffae_ckpt diffae/checkpoints \
   --work_dir exp/student_ccd \
   --gpus 0,1 \
@@ -286,11 +235,6 @@ python train_diffaeB_map.py \
   --print_freq 10
 ```
 
-Student checkpoints are saved to:
-
-```text
-exp/student_ccd/ckpt/epoch_<epoch>.pt
-```
 
 ## Evaluation
 
@@ -318,9 +262,9 @@ Therefore, set `--work_dir` to the student experiment directory and set `--n_ite
 ```bash
 python eval_diffaeB_map.py \
   --tester_version y_diff \
-  --dataset_path datasets/CCD_dataset \
+  --dataset_path datasets/YOUR_dataset \
   --diffae_ckpt diffae/checkpoints \
-  --work_dir exp/student_ccd \
+  --work_dir exp/student \
   --gpus 0 \
   --enable_spnet \
   --z_sem_flowmatch \
@@ -332,107 +276,9 @@ python eval_diffaeB_map.py \
   --t0_ratio 0.5
 ```
 
-Generated images are saved to:
+## Acknowledgements
 
-```text
-exp/student_ccd/imgs_test/
-```
-
-Metrics are printed to the terminal and saved to:
-
-```text
-exp/student_ccd/metrics.txt
-```
-
-The metric script reports:
-
-- `SS`
-- `LC`
-- `Hist`
-- `lpips`
-- `fid`
-- `SSIM`
-- `PSNR`
-- `src_SSIM`
-- `src_PSNR`
-
-### Evaluate the Teacher
-
-```bash
-python eval_diffaeB_map.py \
-  --tester_version backbone \
-  --dataset_path datasets/CCD_dataset \
-  --diffae_ckpt diffae/checkpoints \
-  --work_dir exp/teacher_ccd \
-  --gpus 0 \
-  --enable_spnet \
-  --n_iter 30 \
-  --batch_size 1 \
-  --T_infer_for 50 \
-  --T_infer_back 50 \
-  --t0_ratio 0.5
-```
-
-### Run Metrics Separately
-
-You can also compute metrics directly on saved images:
-
-```bash
-python utils/Metrics.py \
-  --A_dir datasets/CCD_dataset/HE/test \
-  --B_dir datasets/CCD_dataset/pCLE/test \
-  --pred_dir exp/student_ccd/imgs_test \
-  --num 1600
-```
-
-For ER-004, replace `pCLE` with `IHC`:
-
-```bash
-python utils/Metrics.py \
-  --A_dir datasets/ER-004_dataset/HE/test \
-  --B_dir datasets/ER-004_dataset/IHC/test \
-  --pred_dir exp/student_er004/imgs_test \
-  --num 1600
-```
-
-## Important Arguments
-
-| Argument | Description | Default |
-| --- | --- | --- |
-| `--trainer_version` | Training mode: `backbone` or `fm_student` | `fm_student` |
-| `--tester_version` | Evaluation mode: `backbone` or `y_diff` | `y_diff` |
-| `--dataset_path` | Dataset root directory | `datasets/BCI_dataset` |
-| `--diffae_ckpt` | DiffAE checkpoint root | `diffae/checkpoints` |
-| `--work_dir` | Experiment output directory | `exp` |
-| `--gpus` | GPU ids used by `CUDA_VISIBLE_DEVICES` | `0,1` |
-| `--n_iter` | Number of training epochs for teacher/student, or evaluated checkpoint epoch | `200` |
-| `--batch_size` | Batch size | `8` |
-| `--lr` | Learning rate | `5e-6` |
-| `--enable_spnet` | Enable SPNet mapping module | disabled |
-| `--z_sem_flowmatch` | Use latent FM transfer for `z_sem` | disabled |
-| `--fm_work_dir` | FM checkpoint directory under `fm/` | `2048_8` |
-| `--T_train_for` | Forward DDIM steps during training | `50` |
-| `--T_train_back` | Backward DDIM steps during training | `50` |
-| `--T_infer_for` | Forward DDIM steps during inference | `50` |
-| `--T_infer_back` | Backward DDIM steps during inference | `50` |
-| `--t0_ratio` | Return-step ratio | `0.5` |
-| `--pickup_length` | Optional number of image pairs to use | `None` |
-| `--use_wandb` | Enable Weights & Biases logging | disabled |
-
-## Outputs
-
-A typical experiment directory looks like:
-
-```text
-exp/student_ccd/
-+-- ckpt/
-|   +-- epoch_5.pt
-|   +-- epoch_10.pt
-|   +-- ...
-+-- imgs_train/
-+-- imgs_test/
-+-- metrics.txt
-```
+This code builds on DiffAE, CLIP, LPIPS, PyTorch-FID, and related open-source projects. We thank the authors for their contributions to the community.
 
 ## Citation
 
@@ -446,11 +292,3 @@ If you find this repository useful, please cite:
   year      = {2026}
 }
 ```
-
-## License
-
-`TODO: Add license information.`
-
-## Acknowledgements
-
-This code builds on DiffAE, CLIP, LPIPS, PyTorch-FID, and related open-source projects. Please also follow the licenses of the corresponding dependencies and pretrained checkpoints.
