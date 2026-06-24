@@ -94,42 +94,6 @@ diffae/checkpoints/
 
 You can also place the checkpoint elsewhere and pass the directory with `--diffae_ckpt`.
 
-### Teacher Checkpoint for Student Training
-
-The student trainer initializes its teacher model from:
-
-```text
-prepared_teacher_ckpt/epoch_30.pt
-```
-
-After teacher training, copy the selected teacher checkpoint to this path:
-
-```bash
-mkdir -p prepared_teacher_ckpt
-cp exp/teacher_ccd/ckpt/epoch_30.pt prepared_teacher_ckpt/epoch_30.pt
-```
-
-### FM Checkpoint for Student Training and Evaluation
-
-The student trainer and tester load the FM checkpoint from:
-
-```text
-fm/<fm_work_dir>/best_fm.pt
-```
-
-For the default `--fm_work_dir 2048_8`, the expected path is:
-
-```text
-fm/2048_8/best_fm.pt
-```
-
-The standalone FM trainer saves checkpoints inside a timestamped run directory, for example `fm/2048_8/best_fm.pt`. Copy or symlink the selected checkpoint to the expected path:
-
-```bash
-mkdir -p fm/2048_8
-cp fm/2048_8/best_fm.pt
-```
-
 ## Training
 
 The main training entry is:
@@ -170,7 +134,7 @@ Before student training, place the teacher checkpoint at:
 
 ```bash
 mkdir -p prepared_teacher_ckpt
-cp exp/teacher_ccd/ckpt/epoch_30.pt prepared_teacher_ckpt/epoch_30.pt
+cp exp/teacher/ckpt/epoch_30.pt prepared_teacher_ckpt/epoch_30.pt
 ```
 
 ### 2. Train the Latent Flow Matching Module
@@ -213,7 +177,7 @@ The student trainer uses:
 - the teacher checkpoint from `prepared_teacher_ckpt/epoch_30.pt`;
 - the FM checkpoint from `fm/<fm_work_dir>/best_fm.pt`.
 
-Example for the CCD dataset:
+Example:
 
 ```bash
 python train_diffaeB_map.py \
@@ -280,15 +244,3 @@ python eval_diffaeB_map.py \
 
 This code builds on DiffAE, CLIP, LPIPS, PyTorch-FID, and related open-source projects. We thank the authors for their contributions to the community.
 
-## Citation
-
-If you find this repository useful, please cite:
-
-```bibtex
-@inproceedings{todo2026ydiff,
-  title     = {TODO: Paper Title},
-  author    = {TODO: Author List},
-  booktitle = {TODO: Conference},
-  year      = {2026}
-}
-```
